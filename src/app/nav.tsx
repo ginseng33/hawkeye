@@ -7,6 +7,9 @@ export function Nav() {
       <Link href="/stores" className="text-muted-foreground hover:text-foreground">
         Negozi
       </Link>
+      <Link href="/stores/discover" className="text-muted-foreground hover:text-foreground">
+        Scopri nuovi
+      </Link>
       <Link href="/settings" className="text-muted-foreground hover:text-foreground">
         Impostazioni
       </Link>
