@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/server";
-import { updateStore } from "./actions";
+import { runScoreStore, updateStore } from "./actions";
 
 export const instant = false;
 
@@ -49,6 +49,7 @@ export default async function StoreDetailPage({
   }
 
   const updateStoreWithId = updateStore.bind(null, store.id);
+  const runScoreStoreWithId = runScoreStore.bind(null, store.id);
 
   return (
     <div className="mx-auto max-w-2xl p-8">
@@ -68,14 +69,26 @@ export default async function StoreDetailPage({
         </p>
       )}
 
-      {store.score_total !== null && (
-        <div className="mb-6 rounded border p-4">
-          <p className="font-medium">Punteggio: {store.score_total}</p>
-          {store.score_rationale && (
-            <p className="mt-1 text-sm text-muted-foreground">{store.score_rationale}</p>
-          )}
-        </div>
-      )}
+      <div className="mb-6 rounded border p-4">
+        {store.score_total !== null ? (
+          <>
+            <p className="font-medium">Punteggio totale: {store.score_total}/100</p>
+            <p className="text-sm text-muted-foreground">
+              Stile {store.score_style} · Prezzo {store.score_price} · Mercato {store.score_market} · Instagram {store.score_instagram}
+            </p>
+            {store.score_rationale && (
+              <p className="mt-2 text-sm text-muted-foreground">{store.score_rationale}</p>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">Nessun punteggio calcolato ancora.</p>
+        )}
+        <form action={runScoreStoreWithId} className="mt-3">
+          <Button type="submit" variant="secondary" size="sm">
+            {store.score_total !== null ? "Ricalcola punteggio" : "Calcola punteggio"}
+          </Button>
+        </form>
+      </div>
 
       <form action={updateStoreWithId} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">

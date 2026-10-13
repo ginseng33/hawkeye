@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { scoreStore } from "@/lib/scoring/score-store";
 
 export async function updateStore(storeId: string, formData: FormData) {
   const supabase = await createClient();
@@ -40,6 +41,49 @@ export async function updateStore(storeId: string, formData: FormData) {
 
   if (error) {
     redirect(`/stores/${storeId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/stores/${storeId}`);
+  revalidatePath("/stores");
+  redirect(`/stores/${storeId}?saved=1`);
+}
+
+export async function runScoreStore(storeId: string) {
+  const supabase = await createClient();
+
+  const { data: store, error: fetchError } = await supabase
+    .from("stores")
+    .select(
+      "id, name, city, country, website, instagram_handle, brands_sold, style_tags, estimated_price_range, notes"
+    )
+    .eq("id", storeId)
+    .single();
+
+  if (fetchError || !store) {
+    redirect(`/stores/${storeId}?error=${encodeURIComponent("Negozio non trovato")}`);
+  }
+
+  try {
+    const result = await scoreStore(supabase, store);
+
+    const { error: updateError } = await supabase
+      .from("stores")
+      .update({
+        score_style: result.score_style,
+        score_price: result.score_price,
+        score_market: result.score_market,
+        score_instagram: result.score_instagram,
+        score_total: result.score_total,
+        score_rationale: result.score_rationale,
+        market_tier: result.market_tier,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", storeId);
+
+    if (updateError) throw updateError;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Errore durante il calcolo del punteggio";
+    redirect(`/stores/${storeId}?error=${encodeURIComponent(message)}`);
   }
 
   revalidatePath(`/stores/${storeId}`);
