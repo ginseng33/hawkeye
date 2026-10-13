@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { createClient } from "@/lib/supabase/server";
+import { Nav } from "@/app/nav";
 
 // Entire page depends on the signed-in user's session; nothing to prerender.
 export const instant = false;
@@ -37,7 +38,9 @@ export default async function StoresPage() {
   }
 
   return (
-    <div className="p-8">
+    <div>
+      <Nav />
+      <div className="p-8">
       <h1 className="mb-6 text-2xl font-semibold">Negozi ({stores?.length ?? 0})</h1>
       <Table>
         <TableHeader>
@@ -84,6 +87,7 @@ export default async function StoresPage() {
           ))}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

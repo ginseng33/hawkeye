@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/server";
+import { Nav } from "@/app/nav";
 import { runScoreStore, updateStore } from "./actions";
 
 export const instant = false;
@@ -52,7 +53,9 @@ export default async function StoreDetailPage({
   const runScoreStoreWithId = runScoreStore.bind(null, store.id);
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div>
+      <Nav />
+      <div className="mx-auto max-w-2xl p-8">
       <Link href="/stores" className="text-sm text-muted-foreground hover:underline">
         ← Torna ai negozi
       </Link>
@@ -207,6 +210,7 @@ export default async function StoreDetailPage({
           Salva
         </Button>
       </form>
+      </div>
     </div>
   );
 }
