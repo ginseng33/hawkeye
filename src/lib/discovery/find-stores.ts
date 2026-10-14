@@ -8,7 +8,16 @@ const MODEL = "claude-sonnet-5";
 const INPUT_COST_PER_TOKEN = 2 / 1_000_000;
 const OUTPUT_COST_PER_TOKEN = 10 / 1_000_000;
 const COST_PER_WEB_SEARCH = 0.01;
-export const SCORE_THRESHOLD = 75;
+export const DEFAULT_SCORE_THRESHOLD = 75;
+
+async function getScoreThreshold(supabase: SupabaseClient) {
+  const { data } = await supabase
+    .from("score_thresholds")
+    .select("threshold")
+    .eq("entity_type", "store")
+    .single();
+  return data ? Number(data.threshold) : DEFAULT_SCORE_THRESHOLD;
+}
 
 type Candidate = {
   name: string;
@@ -67,6 +76,7 @@ export async function discoverStores(
   params: { city: string; country?: string; keyword?: string; maxResults: number; maxSearches: number }
 ): Promise<DiscoveryResult> {
   await assertBudgetAvailable(supabase, "anthropic");
+  const scoreThreshold = await getScoreThreshold(supabase);
 
   const client = new Anthropic({
     defaultHeaders: process.env.ANTHROPIC_WORKSPACE_ID
@@ -170,7 +180,7 @@ Quando hai finito, chiama submit_candidates con la lista finale (anche vuota se 
     const scoreResult = await scoreStore(supabase, inserted);
     scoringCost += 0; // scoreStore logs its own api_usage row
 
-    if (scoreResult.score_total >= SCORE_THRESHOLD) {
+    if (scoreResult.score_total >= scoreThreshold) {
       await supabase
         .from("stores")
         .update({

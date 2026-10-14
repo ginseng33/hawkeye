@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SCORE_THRESHOLD, MIN_FOLLOWERS, MAX_FOLLOWERS } from "@/lib/discovery/find-creators";
+import { DEFAULT_SCORE_THRESHOLD, MIN_FOLLOWERS, MAX_FOLLOWERS } from "@/lib/discovery/find-creators";
+import { createClient } from "@/lib/supabase/server";
 import { runCreatorDiscovery } from "./actions";
 
 export const instant = false;
@@ -14,6 +15,13 @@ export default async function DiscoverCreatorsPage({
   searchParams: Promise<{ kept?: string; rejected?: string; cost?: string; error?: string }>;
 }) {
   const { kept, rejected, cost, error } = await searchParams;
+  const supabase = await createClient();
+  const { data: thresholdRow } = await supabase
+    .from("score_thresholds")
+    .select("threshold")
+    .eq("entity_type", "creator")
+    .single();
+  const threshold = thresholdRow ? Number(thresholdRow.threshold) : DEFAULT_SCORE_THRESHOLD;
 
   return (
     <div>
@@ -22,8 +30,8 @@ export default async function DiscoverCreatorsPage({
         <h1 className="mb-2 text-2xl font-semibold">Scopri nuovi influencer</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           Follower {MIN_FOLLOWERS.toLocaleString("it-IT")}-{MAX_FOLLOWERS.toLocaleString("it-IT")}.
-          Solo punteggio ≥ {SCORE_THRESHOLD}/100 entra in lista. L&apos;analisi guarda anche le foto
-          dei post più recenti.
+          Solo punteggio ≥ {threshold}/100 entra in lista (soglia modificabile in Impostazioni).
+          L&apos;analisi guarda anche le foto dei post più recenti.
         </p>
 
         {error && (

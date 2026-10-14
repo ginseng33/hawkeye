@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SCORE_THRESHOLD } from "@/lib/discovery/find-stores";
+import { DEFAULT_SCORE_THRESHOLD } from "@/lib/discovery/find-stores";
+import { createClient } from "@/lib/supabase/server";
 import { runDiscovery } from "./actions";
 
 export const instant = false;
@@ -14,6 +15,13 @@ export default async function DiscoverStoresPage({
   searchParams: Promise<{ kept?: string; rejected?: string; cost?: string; error?: string }>;
 }) {
   const { kept, rejected, cost, error } = await searchParams;
+  const supabase = await createClient();
+  const { data: thresholdRow } = await supabase
+    .from("score_thresholds")
+    .select("threshold")
+    .eq("entity_type", "store")
+    .single();
+  const threshold = thresholdRow ? Number(thresholdRow.threshold) : DEFAULT_SCORE_THRESHOLD;
 
   return (
     <div>
@@ -22,7 +30,7 @@ export default async function DiscoverStoresPage({
         <h1 className="mb-2 text-2xl font-semibold">Scopri nuovi negozi</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           Cerca sul web (non Google Maps) negozi affini al brand per città. Solo i candidati con
-          punteggio ≥ {SCORE_THRESHOLD}/100 entrano in lista.
+          punteggio ≥ {threshold}/100 entrano in lista (soglia modificabile in Impostazioni).
         </p>
 
         {error && (

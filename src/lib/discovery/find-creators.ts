@@ -2,9 +2,18 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { assertBudgetAvailable, logApiUsage } from "@/lib/budget";
 import { scoreCreator } from "@/lib/scoring/score-creator";
 
-export const SCORE_THRESHOLD = 75;
+export const DEFAULT_SCORE_THRESHOLD = 60;
 export const MIN_FOLLOWERS = 3000;
 export const MAX_FOLLOWERS = 50000;
+
+async function getScoreThreshold(supabase: SupabaseClient, entityType: "store" | "creator") {
+  const { data } = await supabase
+    .from("score_thresholds")
+    .select("threshold")
+    .eq("entity_type", entityType)
+    .single();
+  return data ? Number(data.threshold) : DEFAULT_SCORE_THRESHOLD;
+}
 
 const APIFY_BASE = "https://api.apify.com/v2/acts";
 
@@ -97,6 +106,8 @@ export async function discoverCreators(
       }
     }
   }
+
+  const scoreThreshold = await getScoreThreshold(supabase, "creator");
 
   // Dedupe against creators already in the database.
   const { data: existing } = await supabase.from("creators").select("handle");
@@ -191,7 +202,7 @@ export async function discoverCreators(
         avg_comments: Math.round(avgComments),
       });
 
-      if (result.score_total >= SCORE_THRESHOLD) {
+      if (result.score_total >= scoreThreshold) {
         await supabase
           .from("creators")
           .update({

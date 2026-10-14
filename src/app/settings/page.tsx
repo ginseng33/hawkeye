@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/server";
 import { Nav } from "@/app/nav";
-import { updateBudgetLimits, updateWeights } from "./actions";
+import { updateBudgetLimits, updateScoreThresholds, updateWeights } from "./actions";
 
 export const instant = false;
 
@@ -36,14 +36,20 @@ export default async function SettingsPage({
   const { saved } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: weights }, { data: limits }, { data: usageRows }] = await Promise.all([
-    supabase.from("scoring_weights").select("entity_type, criterion, weight"),
-    supabase.from("budget_limits").select("service, monthly_limit_usd"),
-    supabase
-      .from("api_usage")
-      .select("service, estimated_cost_usd, created_at")
-      .gte("created_at", new Date(new Date().setDate(1)).toISOString()),
-  ]);
+  const [{ data: weights }, { data: limits }, { data: usageRows }, { data: thresholds }] =
+    await Promise.all([
+      supabase.from("scoring_weights").select("entity_type, criterion, weight"),
+      supabase.from("budget_limits").select("service, monthly_limit_usd"),
+      supabase
+        .from("api_usage")
+        .select("service, estimated_cost_usd, created_at")
+        .gte("created_at", new Date(new Date().setDate(1)).toISOString()),
+      supabase.from("score_thresholds").select("entity_type, threshold"),
+    ]);
+
+  const thresholdMap = Object.fromEntries(
+    (thresholds ?? []).map((t) => [t.entity_type, Number(t.threshold)])
+  );
 
   const weightMap = Object.fromEntries(
     (weights ?? []).map((w) => [`${w.entity_type}__${w.criterion}`, Math.round(Number(w.weight) * 100)])
@@ -122,6 +128,57 @@ export default async function SettingsPage({
 
             <Button type="submit" className="w-fit">
               Salva pesi
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Soglia minima per entrare in lista</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={updateScoreThresholds} className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="store" className="flex-1">
+                Negozi (scoperta da ricerca web)
+              </Label>
+              <div className="flex items-center gap-1">
+                <Input
+                  id="store"
+                  name="store"
+                  type="number"
+                  min={0}
+                  max={100}
+                  defaultValue={thresholdMap.store ?? 75}
+                  className="w-20"
+                />
+                <span className="text-sm text-muted-foreground">/100</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="creator" className="flex-1">
+                Influencer (scoperta da hashtag/handle)
+              </Label>
+              <div className="flex items-center gap-1">
+                <Input
+                  id="creator"
+                  name="creator"
+                  type="number"
+                  min={0}
+                  max={100}
+                  defaultValue={thresholdMap.creator ?? 60}
+                  className="w-20"
+                />
+                <span className="text-sm text-muted-foreground">/100</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Solo i candidati trovati tramite le pagine &quot;Scopri nuovi&quot; con punteggio pari o
+              superiore vengono salvati in lista; gli altri sono scartati automaticamente.
+            </p>
+            <Button type="submit" className="w-fit">
+              Salva soglie
             </Button>
           </form>
         </CardContent>

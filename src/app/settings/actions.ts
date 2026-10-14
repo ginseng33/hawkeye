@@ -49,3 +49,19 @@ export async function updateBudgetLimits(formData: FormData) {
   revalidatePath("/settings");
   redirect("/settings?saved=budget");
 }
+
+export async function updateScoreThresholds(formData: FormData) {
+  const supabase = await createClient();
+
+  for (const entityType of ["store", "creator"] as const) {
+    const raw = formData.get(entityType);
+    if (raw === null) continue;
+    await supabase
+      .from("score_thresholds")
+      .update({ threshold: Number(raw), updated_at: new Date().toISOString() })
+      .eq("entity_type", entityType);
+  }
+
+  revalidatePath("/settings");
+  redirect("/settings?saved=thresholds");
+}
