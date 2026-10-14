@@ -1,5 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Nav } from "@/app/nav";
+import { TopBar } from "@/components/hawkeye/top-bar";
+import { CommandPalette } from "@/components/hawkeye/command-palette";
+import { LargeTitle } from "@/components/hawkeye/large-title";
+import { FormGroup } from "@/components/hawkeye/form-group";
 import { createClient } from "@/lib/supabase/server";
 
 export const instant = false;
@@ -39,6 +41,34 @@ function scoreOutcomeStats(rows: { score_total: number | null; pipeline_status: 
     .sort((a, b) => b.avgScore - a.avgScore);
 }
 
+function KpiTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[20px] border border-border bg-card p-5">
+      <p className="font-technical mb-1 text-[11px] text-muted-foreground">{label}</p>
+      <p className="font-display tabular-nums text-[44px] leading-none text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function StatList({ rows }: { rows: { label: string; value: string }[] }) {
+  if (rows.length === 0) {
+    return <p className="px-4 py-6 text-sm text-muted-foreground">Nessun dato disponibile.</p>;
+  }
+  return (
+    <>
+      {rows.map((r) => (
+        <div
+          key={r.label}
+          className="flex min-h-11 items-center justify-between gap-4 border-b border-border px-4 py-2 last:border-b-0"
+        >
+          <span className="text-[14px] text-foreground">{r.label}</span>
+          <span className="font-technical tabular-nums text-[12px] text-muted-foreground">{r.value}</span>
+        </div>
+      ))}
+    </>
+  );
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 
@@ -68,137 +98,65 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <Nav />
-      <div className="mx-auto max-w-4xl p-8">
-        <h1 className="mb-6 text-2xl font-semibold">Dashboard</h1>
+      <TopBar />
+      <CommandPalette />
+      <div className="mx-auto max-w-[1000px] px-6 py-8">
+        <LargeTitle title="Dashboard" />
 
         <div className="mb-6 grid grid-cols-3 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">Negozi totali</CardTitle>
-            </CardHeader>
-            <CardContent className="text-3xl font-semibold">{storeRows.length}</CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Influencer totali
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-3xl font-semibold">{creatorRows.length}</CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Spesa API questo mese
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-3xl font-semibold">${totalSpend.toFixed(2)}</CardContent>
-          </Card>
+          <KpiTile label="NEGOZI TOTALI" value={String(storeRows.length)} />
+          <KpiTile label="INFLUENCER TOTALI" value={String(creatorRows.length)} />
+          <KpiTile label="SPESA API QUESTO MESE" value={`$${totalSpend.toFixed(2)}`} />
         </div>
 
-        <div className="mb-6 grid grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Negozi per stato</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="flex flex-col gap-1 text-sm">
-                {Object.entries(storeCounts).map(([status, count]) => (
-                  <li key={status} className="flex justify-between">
-                    <span>{STATUS_LABEL[status] ?? status}</span>
-                    <span className="font-medium">{count}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Influencer per stato</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="flex flex-col gap-1 text-sm">
-                {Object.entries(creatorCounts).map(([status, count]) => (
-                  <li key={status} className="flex justify-between">
-                    <span>{STATUS_LABEL[status] ?? status}</span>
-                    <span className="font-medium">{count}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 gap-4">
+          <FormGroup title="Negozi per stato">
+            <StatList
+              rows={Object.entries(storeCounts).map(([status, count]) => ({
+                label: STATUS_LABEL[status] ?? status,
+                value: String(count),
+              }))}
+            />
+          </FormGroup>
+          <FormGroup title="Influencer per stato">
+            <StatList
+              rows={Object.entries(creatorCounts).map(([status, count]) => ({
+                label: STATUS_LABEL[status] ?? status,
+                value: String(count),
+              }))}
+            />
+          </FormGroup>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Negozi — punteggio medio per esito</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {storeStats.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Non ci sono ancora abbastanza dati (nessun negozio con punteggio calcolato).
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-1 text-sm">
-                  {storeStats.map((s) => (
-                    <li key={s.status} className="flex justify-between">
-                      <span>
-                        {STATUS_LABEL[s.status] ?? s.status} ({s.count})
-                      </span>
-                      <span className="font-medium">{s.avgScore}/100</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Influencer — punteggio medio per esito</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {creatorStats.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Non ci sono ancora abbastanza dati (nessun influencer con punteggio calcolato).
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-1 text-sm">
-                  {creatorStats.map((s) => (
-                    <li key={s.status} className="flex justify-between">
-                      <span>
-                        {STATUS_LABEL[s.status] ?? s.status} ({s.count})
-                      </span>
-                      <span className="font-medium">{s.avgScore}/100</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 gap-4">
+          <FormGroup title="Negozi — punteggio medio per esito">
+            <StatList
+              rows={storeStats.map((s) => ({
+                label: `${STATUS_LABEL[s.status] ?? s.status} (${s.count})`,
+                value: `${s.avgScore}/100`,
+              }))}
+            />
+          </FormGroup>
+          <FormGroup title="Influencer — punteggio medio per esito">
+            <StatList
+              rows={creatorStats.map((s) => ({
+                label: `${STATUS_LABEL[s.status] ?? s.status} (${s.count})`,
+                value: `${s.avgScore}/100`,
+              }))}
+            />
+          </FormGroup>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Spesa API per servizio (questo mese)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="flex flex-col gap-1 text-sm">
-              {Object.entries(spendByService).map(([service, amount]) => (
-                <li key={service} className="flex justify-between">
-                  <span>{service}</span>
-                  <span className="font-medium">${amount.toFixed(2)}</span>
-                </li>
-              ))}
-              {Object.keys(spendByService).length === 0 && (
-                <p className="text-sm text-muted-foreground">Nessuna spesa registrata questo mese.</p>
-              )}
-            </ul>
-          </CardContent>
-        </Card>
+        <FormGroup title="Spesa API per servizio (questo mese)">
+          <StatList
+            rows={Object.entries(spendByService).map(([service, amount]) => ({
+              label: service,
+              value: `$${amount.toFixed(2)}`,
+            }))}
+          />
+        </FormGroup>
 
-        <p className="mt-6 text-xs text-muted-foreground">
+        <p className="text-[12px] leading-relaxed text-muted-foreground">
           La correlazione punteggio↔esito si affina con più dati: più partner portati fino a
           &quot;Partner&quot; o &quot;Rifiutato&quot;, più questi numeri diventano utili per capire se i
           pesi dei criteri vanno aggiustati.
