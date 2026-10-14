@@ -6,7 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/server";
 import { Nav } from "@/app/nav";
-import { runScoreStore, updateStore } from "./actions";
+import { DraftsSection } from "@/components/drafts-section";
+import {
+  deleteStoreDraft,
+  generateStoreDraft,
+  markStoreDraftSent,
+  runScoreStore,
+  updateStore,
+} from "./actions";
 
 export const instant = false;
 
@@ -49,8 +56,15 @@ export default async function StoreDetailPage({
     notFound();
   }
 
+  const { data: drafts } = await supabase
+    .from("message_drafts")
+    .select("id, channel, variant_label, body, status")
+    .eq("store_id", store.id)
+    .order("created_at", { ascending: false });
+
   const updateStoreWithId = updateStore.bind(null, store.id);
   const runScoreStoreWithId = runScoreStore.bind(null, store.id);
+  const generateStoreDraftWithId = generateStoreDraft.bind(null, store.id);
 
   return (
     <div>
@@ -92,6 +106,13 @@ export default async function StoreDetailPage({
           </Button>
         </form>
       </div>
+
+      <DraftsSection
+        drafts={drafts ?? []}
+        generateAction={generateStoreDraftWithId}
+        markSentAction={markStoreDraftSent}
+        deleteAction={deleteStoreDraft}
+      />
 
       <form action={updateStoreWithId} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">

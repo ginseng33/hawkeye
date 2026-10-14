@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { scoreStore } from "@/lib/scoring/score-store";
+import { generateMessageDraft } from "@/lib/messaging/generate-draft";
 
 export async function updateStore(storeId: string, formData: FormData) {
   const supabase = await createClient();
@@ -89,4 +90,49 @@ export async function runScoreStore(storeId: string) {
   revalidatePath(`/stores/${storeId}`);
   revalidatePath("/stores");
   redirect(`/stores/${storeId}?saved=1`);
+}
+
+export async function generateStoreDraft(storeId: string, formData: FormData) {
+  const supabase = await createClient();
+
+  const { data: store, error } = await supabase
+    .from("stores")
+    .select("id, name, city, country, contact_person, brands_sold, score_rationale")
+    .eq("id", storeId)
+    .single();
+
+  if (error || !store) {
+    redirect(`/stores/${storeId}?error=${encodeURIComponent("Negozio non trovato")}`);
+  }
+
+  const channel = (formData.get("channel") as "email" | "dm") || "email";
+  const variantLabel = (formData.get("variant_label") as string)?.trim() || "default";
+
+  try {
+    const body = await generateMessageDraft(supabase, { type: "store", ...store }, channel, variantLabel);
+    await supabase.from("message_drafts").insert({
+      store_id: storeId,
+      channel,
+      variant_label: variantLabel,
+      body,
+      status: "draft",
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Errore nella generazione del messaggio";
+    redirect(`/stores/${storeId}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath(`/stores/${storeId}`);
+}
+
+export async function markStoreDraftSent(draftId: string) {
+  const supabase = await createClient();
+  await supabase.from("message_drafts").update({ status: "sent" }).eq("id", draftId);
+  revalidatePath("/stores", "layout");
+}
+
+export async function deleteStoreDraft(draftId: string) {
+  const supabase = await createClient();
+  await supabase.from("message_drafts").delete().eq("id", draftId);
+  revalidatePath("/stores", "layout");
 }

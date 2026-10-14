@@ -6,7 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/server";
 import { Nav } from "@/app/nav";
-import { updateCreator } from "./actions";
+import { DraftsSection } from "@/components/drafts-section";
+import {
+  deleteCreatorDraft,
+  generateCreatorDraft,
+  markCreatorDraftSent,
+  updateCreator,
+} from "./actions";
 
 export const instant = false;
 
@@ -37,7 +43,14 @@ export default async function CreatorDetailPage({
 
   if (error || !creator) notFound();
 
+  const { data: drafts } = await supabase
+    .from("message_drafts")
+    .select("id, channel, variant_label, body, status")
+    .eq("creator_id", creator.id)
+    .order("created_at", { ascending: false });
+
   const updateCreatorWithId = updateCreator.bind(null, creator.id);
+  const generateCreatorDraftWithId = generateCreatorDraft.bind(null, creator.id);
 
   return (
     <div>
@@ -70,6 +83,13 @@ export default async function CreatorDetailPage({
             </p>
           )}
         </div>
+
+        <DraftsSection
+          drafts={drafts ?? []}
+          generateAction={generateCreatorDraftWithId}
+          markSentAction={markCreatorDraftSent}
+          deleteAction={deleteCreatorDraft}
+        />
 
         <form action={updateCreatorWithId} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
