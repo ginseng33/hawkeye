@@ -1,29 +1,12 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TopBar } from "@/components/hawkeye/top-bar";
+import { CommandPalette } from "@/components/hawkeye/command-palette";
+import { LargeTitle } from "@/components/hawkeye/large-title";
+import { buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
-import { Nav } from "@/app/nav";
+import { CreatorsListClient } from "./creators-list-client";
 
 export const instant = false;
-
-const STATUS_LABEL: Record<string, string> = {
-  new: "Nuovo",
-  to_contact: "Da contattare",
-  contacted: "Contattato",
-  replied: "Ha risposto",
-  sample_sent: "Campione inviato",
-  negotiating: "In trattativa",
-  partner: "Partner",
-  rejected: "Rifiutato",
-  not_interested: "Non interessato",
-};
 
 export default async function CreatorsPage() {
   const supabase = await createClient();
@@ -38,41 +21,19 @@ export default async function CreatorsPage() {
 
   return (
     <div>
-      <Nav />
-      <div className="p-8">
-        <h1 className="mb-6 text-2xl font-semibold">Influencer ({creators?.length ?? 0})</h1>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Handle</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead>Follower</TableHead>
-              <TableHead>Engagement</TableHead>
-              <TableHead>Punteggio</TableHead>
-              <TableHead>Stato</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {creators?.map((c) => (
-              <TableRow key={c.id}>
-                <TableCell className="font-medium">
-                  <Link href={`/creators/${c.id}`} className="hover:underline">
-                    @{c.handle}
-                  </Link>
-                </TableCell>
-                <TableCell>{c.full_name ?? "—"}</TableCell>
-                <TableCell>{c.follower_count?.toLocaleString("it-IT") ?? "—"}</TableCell>
-                <TableCell>{c.engagement_rate ? `${c.engagement_rate}%` : "—"}</TableCell>
-                <TableCell>{c.score_total ?? "—"}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">
-                    {STATUS_LABEL[c.pipeline_status] ?? c.pipeline_status}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <TopBar />
+      <CommandPalette />
+      <div className="mx-auto max-w-[1200px] px-6 py-8">
+        <LargeTitle
+          title="Influencer"
+          subtitle={`${creators?.length ?? 0} in totale`}
+          action={
+            <Link href="/creators/discover" className={buttonVariants({ variant: "default" })}>
+              Scopri nuovi
+            </Link>
+          }
+        />
+        <CreatorsListClient creators={creators ?? []} />
       </div>
     </div>
   );

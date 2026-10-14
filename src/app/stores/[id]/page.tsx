@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
+import { TopBar } from "@/components/hawkeye/top-bar";
+import { CommandPalette } from "@/components/hawkeye/command-palette";
+import { ScoreRing, SubScoreBar } from "@/components/hawkeye/score-ring";
+import { StatusPill } from "@/components/hawkeye/status-pill";
+import { FormGroup, FormRow } from "@/components/hawkeye/form-group";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/server";
-import { Nav } from "@/app/nav";
-import { DraftsSection } from "@/components/drafts-section";
+import { DraftsPanel } from "@/components/drafts-panel";
 import { InteractionsSection } from "@/components/interactions-section";
 import {
   deleteStoreDraft,
@@ -36,6 +40,9 @@ const PIPELINE_STATUSES = [
   { value: "rejected", label: "Rifiutato" },
   { value: "not_interested", label: "Non interessato" },
 ];
+
+const fieldInputClass =
+  "h-7 border-0 bg-transparent p-0 text-right text-[14px] shadow-none focus-visible:ring-0";
 
 export default async function StoreDetailPage({
   params,
@@ -77,171 +84,188 @@ export default async function StoreDetailPage({
 
   return (
     <div>
-      <Nav />
-      <div className="mx-auto max-w-2xl p-8">
-      <Link href="/stores" className="text-sm text-muted-foreground hover:underline">
-        ← Torna ai negozi
-      </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-semibold">{store.name}</h1>
+      <TopBar />
+      <CommandPalette />
+      <div className="mx-auto max-w-[720px] px-6 py-8">
+        <Link
+          href="/stores"
+          className="font-technical mb-4 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+        >
+          <ChevronLeft className="size-3.5" />
+          NEGOZI
+        </Link>
 
-      {saved && (
-        <p className="mb-4 rounded bg-green-50 px-3 py-2 text-sm text-green-700">
-          Salvato.
-        </p>
-      )}
-      {saveError && (
-        <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
-          {saveError}
-        </p>
-      )}
-
-      <div className="mb-6 rounded border p-4">
-        {store.score_total !== null ? (
-          <>
-            <p className="font-medium">Punteggio totale: {store.score_total}/100</p>
-            <p className="text-sm text-muted-foreground">
-              Stile {store.score_style} · Prezzo {store.score_price} · Mercato {store.score_market} · Instagram {store.score_instagram}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-[32px] leading-tight text-foreground">{store.name}</h1>
+            <p className="font-technical mt-1 text-[11px] text-muted-foreground">
+              {[store.city, store.country].filter(Boolean).join(" · ") || "—"}
             </p>
-            {store.score_rationale && (
-              <p className="mt-2 text-sm text-muted-foreground">{store.score_rationale}</p>
-            )}
-          </>
-        ) : (
-          <p className="text-sm text-muted-foreground">Nessun punteggio calcolato ancora.</p>
+          </div>
+          <StatusPill status={store.pipeline_status} />
+        </div>
+
+        {saved && (
+          <p className="font-technical mb-4 rounded-xl border border-success/30 bg-success-tint px-4 py-2.5 text-[12px] text-success">
+            SALVATO
+          </p>
         )}
-        <form action={runScoreStoreWithId} className="mt-3">
-          <Button type="submit" variant="secondary" size="sm">
-            {store.score_total !== null ? "Ricalcola punteggio" : "Calcola punteggio"}
+        {saveError && (
+          <p className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm text-destructive">
+            {saveError}
+          </p>
+        )}
+
+        {/* Score hero */}
+        <div className="mb-6 flex items-center gap-6 rounded-[20px] border border-border bg-card p-6">
+          <ScoreRing score={store.score_total} />
+          <div className="flex-1">
+            {store.score_total !== null ? (
+              <>
+                <div className="mb-3 grid grid-cols-2 gap-x-6 gap-y-2">
+                  <SubScoreBar label="Stile" score={store.score_style} />
+                  <SubScoreBar label="Prezzo" score={store.score_price} />
+                  <SubScoreBar label="Mercato" score={store.score_market} />
+                  <SubScoreBar label="Instagram" score={store.score_instagram} />
+                </div>
+                {store.score_rationale && (
+                  <p className="text-[13px] leading-relaxed text-muted-foreground">
+                    {store.score_rationale}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nessun punteggio calcolato ancora.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-6 flex gap-3">
+          <form action={runScoreStoreWithId}>
+            <Button type="submit" variant="outline">
+              {store.score_total !== null ? "Ricalcola punteggio" : "Calcola punteggio"}
+            </Button>
+          </form>
+          <DraftsPanel
+            drafts={drafts ?? []}
+            generateAction={generateStoreDraftWithId}
+            markSentAction={markStoreDraftSent}
+            deleteAction={deleteStoreDraft}
+          />
+        </div>
+
+        <InteractionsSection interactions={interactions ?? []} logAction={logStoreInteractionWithId} />
+
+        <form action={updateStoreWithId} className="flex flex-col">
+          <FormGroup title="Anagrafica">
+            <FormRow label="Nome">
+              <Input id="name" name="name" defaultValue={store.name} required className={fieldInputClass} />
+            </FormRow>
+            <FormRow label="Città">
+              <Input id="city" name="city" defaultValue={store.city ?? ""} className={fieldInputClass} />
+            </FormRow>
+            <FormRow label="Paese">
+              <Input id="country" name="country" defaultValue={store.country ?? ""} className={fieldInputClass} />
+            </FormRow>
+            <FormRow label="Indirizzo">
+              <Input id="address" name="address" defaultValue={store.address ?? ""} className={fieldInputClass} />
+            </FormRow>
+            <FormRow label="Sito web">
+              <Input id="website" name="website" defaultValue={store.website ?? ""} className={fieldInputClass} />
+            </FormRow>
+            <FormRow label="Instagram">
+              <Input
+                id="instagram_handle"
+                name="instagram_handle"
+                defaultValue={store.instagram_handle ?? ""}
+                className={fieldInputClass}
+              />
+            </FormRow>
+          </FormGroup>
+
+          <FormGroup title="Contatti">
+            <FormRow label="Email">
+              <Input id="email" name="email" type="email" defaultValue={store.email ?? ""} className={fieldInputClass} />
+            </FormRow>
+            <FormRow label="Telefono">
+              <Input id="phone" name="phone" defaultValue={store.phone ?? ""} className={fieldInputClass} />
+            </FormRow>
+            <FormRow label="Buyer / titolare">
+              <Input
+                id="contact_person"
+                name="contact_person"
+                defaultValue={store.contact_person ?? ""}
+                className={fieldInputClass}
+              />
+            </FormRow>
+          </FormGroup>
+
+          <FormGroup title="Commerciale">
+            <FormRow label="Fascia di prezzo">
+              <Input
+                id="estimated_price_range"
+                name="estimated_price_range"
+                placeholder="es. 100-300€"
+                defaultValue={store.estimated_price_range ?? ""}
+                className={fieldInputClass}
+              />
+            </FormRow>
+            <FormRow label="Modello commerciale">
+              <select
+                id="business_model"
+                name="business_model"
+                defaultValue={store.business_model}
+                className="h-7 rounded-md border-0 bg-transparent text-right text-[14px] focus:outline-none"
+              >
+                {BUSINESS_MODELS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </FormRow>
+            <FormRow label="Stato pipeline">
+              <select
+                id="pipeline_status"
+                name="pipeline_status"
+                defaultValue={store.pipeline_status}
+                className="h-7 rounded-md border-0 bg-transparent text-right text-[14px] focus:outline-none"
+              >
+                {PIPELINE_STATUSES.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </FormRow>
+            <FormRow label="Brand venduti" stacked>
+              <Input
+                id="brands_sold"
+                name="brands_sold"
+                placeholder="separati da virgola"
+                defaultValue={(store.brands_sold ?? []).join(", ")}
+              />
+            </FormRow>
+            <FormRow label="Stile / tag" stacked>
+              <Input
+                id="style_tags"
+                name="style_tags"
+                placeholder="separati da virgola"
+                defaultValue={(store.style_tags ?? []).join(", ")}
+              />
+            </FormRow>
+          </FormGroup>
+
+          <FormGroup title="Note">
+            <FormRow label="" stacked>
+              <Textarea id="notes" name="notes" defaultValue={store.notes ?? ""} rows={4} />
+            </FormRow>
+          </FormGroup>
+
+          <Button type="submit" className="w-fit">
+            Salva modifiche
           </Button>
         </form>
-      </div>
-
-      <DraftsSection
-        drafts={drafts ?? []}
-        generateAction={generateStoreDraftWithId}
-        markSentAction={markStoreDraftSent}
-        deleteAction={deleteStoreDraft}
-      />
-
-      <InteractionsSection interactions={interactions ?? []} logAction={logStoreInteractionWithId} />
-
-      <form action={updateStoreWithId} className="flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input id="name" name="name" defaultValue={store.name} required />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="city">Città</Label>
-            <Input id="city" name="city" defaultValue={store.city ?? ""} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="country">Paese</Label>
-            <Input id="country" name="country" defaultValue={store.country ?? ""} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="address">Indirizzo</Label>
-            <Input id="address" name="address" defaultValue={store.address ?? ""} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="website">Sito web</Label>
-            <Input id="website" name="website" defaultValue={store.website ?? ""} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="instagram_handle">Instagram</Label>
-            <Input
-              id="instagram_handle"
-              name="instagram_handle"
-              defaultValue={store.instagram_handle ?? ""}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" defaultValue={store.email ?? ""} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="phone">Telefono</Label>
-            <Input id="phone" name="phone" defaultValue={store.phone ?? ""} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="contact_person">Buyer / titolare</Label>
-            <Input
-              id="contact_person"
-              name="contact_person"
-              defaultValue={store.contact_person ?? ""}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="estimated_price_range">Fascia di prezzo</Label>
-            <Input
-              id="estimated_price_range"
-              name="estimated_price_range"
-              placeholder="es. 100-300€"
-              defaultValue={store.estimated_price_range ?? ""}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="brands_sold">Brand venduti (separati da virgola)</Label>
-          <Input
-            id="brands_sold"
-            name="brands_sold"
-            defaultValue={(store.brands_sold ?? []).join(", ")}
-          />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="style_tags">Stile / tag (separati da virgola)</Label>
-          <Input
-            id="style_tags"
-            name="style_tags"
-            defaultValue={(store.style_tags ?? []).join(", ")}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="business_model">Modello commerciale</Label>
-            <select
-              id="business_model"
-              name="business_model"
-              defaultValue={store.business_model}
-              className="h-9 rounded-md border bg-transparent px-3 text-sm"
-            >
-              {BUSINESS_MODELS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pipeline_status">Stato pipeline</Label>
-            <select
-              id="pipeline_status"
-              name="pipeline_status"
-              defaultValue={store.pipeline_status}
-              className="h-9 rounded-md border bg-transparent px-3 text-sm"
-            >
-              {PIPELINE_STATUSES.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="notes">Note</Label>
-          <Textarea id="notes" name="notes" defaultValue={store.notes ?? ""} rows={4} />
-        </div>
-
-        <Button type="submit" className="w-fit">
-          Salva
-        </Button>
-      </form>
       </div>
     </div>
   );
