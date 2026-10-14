@@ -7,9 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/server";
 import { Nav } from "@/app/nav";
 import { DraftsSection } from "@/components/drafts-section";
+import { InteractionsSection } from "@/components/interactions-section";
 import {
   deleteCreatorDraft,
   generateCreatorDraft,
+  logCreatorInteraction,
   markCreatorDraftSent,
   updateCreator,
 } from "./actions";
@@ -49,8 +51,15 @@ export default async function CreatorDetailPage({
     .eq("creator_id", creator.id)
     .order("created_at", { ascending: false });
 
+  const { data: interactions } = await supabase
+    .from("interactions")
+    .select("id, occurred_at, channel, interaction_type, notes")
+    .eq("creator_id", creator.id)
+    .order("occurred_at", { ascending: false });
+
   const updateCreatorWithId = updateCreator.bind(null, creator.id);
   const generateCreatorDraftWithId = generateCreatorDraft.bind(null, creator.id);
+  const logCreatorInteractionWithId = logCreatorInteraction.bind(null, creator.id);
 
   return (
     <div>
@@ -90,6 +99,8 @@ export default async function CreatorDetailPage({
           markSentAction={markCreatorDraftSent}
           deleteAction={deleteCreatorDraft}
         />
+
+        <InteractionsSection interactions={interactions ?? []} logAction={logCreatorInteractionWithId} />
 
         <form action={updateCreatorWithId} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">

@@ -16,6 +16,12 @@ export function Nav() {
       <Link href="/creators/discover" className="text-muted-foreground hover:text-foreground">
         Scopri influencer
       </Link>
+      <Link href="/pipeline" className="text-muted-foreground hover:text-foreground">
+        Pipeline
+      </Link>
+      <Link href="/dashboard" className="text-muted-foreground hover:text-foreground">
+        Dashboard
+      </Link>
       <Link href="/settings" className="text-muted-foreground hover:text-foreground">
         Impostazioni
       </Link>

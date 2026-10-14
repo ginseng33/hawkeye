@@ -136,3 +136,20 @@ export async function deleteStoreDraft(draftId: string) {
   await supabase.from("message_drafts").delete().eq("id", draftId);
   revalidatePath("/stores", "layout");
 }
+
+export async function logStoreInteraction(storeId: string, formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  await supabase.from("interactions").insert({
+    store_id: storeId,
+    created_by: user?.id,
+    channel: formData.get("channel"),
+    interaction_type: formData.get("interaction_type"),
+    notes: formData.get("notes") || null,
+  });
+
+  revalidatePath(`/stores/${storeId}`);
+}

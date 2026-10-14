@@ -7,9 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/server";
 import { Nav } from "@/app/nav";
 import { DraftsSection } from "@/components/drafts-section";
+import { InteractionsSection } from "@/components/interactions-section";
 import {
   deleteStoreDraft,
   generateStoreDraft,
+  logStoreInteraction,
   markStoreDraftSent,
   runScoreStore,
   updateStore,
@@ -62,9 +64,16 @@ export default async function StoreDetailPage({
     .eq("store_id", store.id)
     .order("created_at", { ascending: false });
 
+  const { data: interactions } = await supabase
+    .from("interactions")
+    .select("id, occurred_at, channel, interaction_type, notes")
+    .eq("store_id", store.id)
+    .order("occurred_at", { ascending: false });
+
   const updateStoreWithId = updateStore.bind(null, store.id);
   const runScoreStoreWithId = runScoreStore.bind(null, store.id);
   const generateStoreDraftWithId = generateStoreDraft.bind(null, store.id);
+  const logStoreInteractionWithId = logStoreInteraction.bind(null, store.id);
 
   return (
     <div>
@@ -113,6 +122,8 @@ export default async function StoreDetailPage({
         markSentAction={markStoreDraftSent}
         deleteAction={deleteStoreDraft}
       />
+
+      <InteractionsSection interactions={interactions ?? []} logAction={logStoreInteractionWithId} />
 
       <form action={updateStoreWithId} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">
