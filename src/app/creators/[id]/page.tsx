@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
+import { TopBar } from "@/components/hawkeye/top-bar";
+import { CommandPalette } from "@/components/hawkeye/command-palette";
+import { ScoreRing, SubScoreBar } from "@/components/hawkeye/score-ring";
+import { StatusPill } from "@/components/hawkeye/status-pill";
+import { FormGroup, FormRow } from "@/components/hawkeye/form-group";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/server";
-import { Nav } from "@/app/nav";
-import { DraftsSection } from "@/components/drafts-section";
+import { DraftsPanel } from "@/components/drafts-panel";
 import { InteractionsSection } from "@/components/interactions-section";
 import {
   deleteCreatorDraft,
@@ -29,6 +33,9 @@ const PIPELINE_STATUSES = [
   { value: "rejected", label: "Rifiutato" },
   { value: "not_interested", label: "Non interessato" },
 ];
+
+const fieldInputClass =
+  "h-7 border-0 bg-transparent p-0 text-right text-[14px] shadow-none focus-visible:ring-0";
 
 export default async function CreatorDetailPage({
   params,
@@ -63,71 +70,92 @@ export default async function CreatorDetailPage({
 
   return (
     <div>
-      <Nav />
-      <div className="mx-auto max-w-2xl p-8">
-        <Link href="/creators" className="text-sm text-muted-foreground hover:underline">
-          ← Torna agli influencer
+      <TopBar />
+      <CommandPalette />
+      <div className="mx-auto max-w-[720px] px-6 py-8">
+        <Link
+          href="/creators"
+          className="font-technical mb-4 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+        >
+          <ChevronLeft className="size-3.5" />
+          INFLUENCER
         </Link>
-        <h1 className="mb-6 mt-2 text-2xl font-semibold">@{creator.handle}</h1>
 
-        {saved && (
-          <p className="mb-4 rounded bg-green-50 px-3 py-2 text-sm text-green-700">Salvato.</p>
-        )}
-
-        <div className="mb-6 rounded border p-4">
-          {creator.score_total !== null ? (
-            <>
-              <p className="font-medium">Punteggio totale: {creator.score_total}/100</p>
-              <p className="text-sm text-muted-foreground">
-                Estetica {creator.score_aesthetic} · Engagement {creator.score_engagement} ({creator.engagement_rate}%) ·
-                Autenticità {creator.score_authenticity} · Qualità contenuti {creator.score_content_quality}
-              </p>
-              {creator.score_rationale && (
-                <p className="mt-2 text-sm text-muted-foreground">{creator.score_rationale}</p>
-              )}
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Nessun punteggio (questo profilo è stato aggiunto manualmente).
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-[32px] leading-tight text-foreground">@{creator.handle}</h1>
+            <p className="font-technical mt-1 text-[11px] text-muted-foreground">
+              {creator.full_name ?? "—"} · {(creator.follower_count ?? 0).toLocaleString("it-IT")} FOLLOWER
             </p>
-          )}
+          </div>
+          <StatusPill status={creator.pipeline_status} />
         </div>
 
-        <DraftsSection
-          drafts={drafts ?? []}
-          generateAction={generateCreatorDraftWithId}
-          markSentAction={markCreatorDraftSent}
-          deleteAction={deleteCreatorDraft}
-        />
+        {saved && (
+          <p className="font-technical mb-4 rounded-xl border border-success/30 bg-success-tint px-4 py-2.5 text-[12px] text-success">
+            SALVATO
+          </p>
+        )}
+
+        <div className="mb-6 flex items-center gap-6 rounded-[20px] border border-border bg-card p-6">
+          <ScoreRing score={creator.score_total} />
+          <div className="flex-1">
+            {creator.score_total !== null ? (
+              <>
+                <div className="mb-3 grid grid-cols-2 gap-x-6 gap-y-2">
+                  <SubScoreBar label="Estetica" score={creator.score_aesthetic} />
+                  <SubScoreBar label={`Engagement (${creator.engagement_rate}%)`} score={creator.score_engagement} />
+                  <SubScoreBar label="Autenticità" score={creator.score_authenticity} />
+                  <SubScoreBar label="Qualità contenuti" score={creator.score_content_quality} />
+                </div>
+                {creator.score_rationale && (
+                  <p className="text-[13px] leading-relaxed text-muted-foreground">
+                    {creator.score_rationale}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nessun punteggio (profilo aggiunto manualmente).
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <DraftsPanel
+            drafts={drafts ?? []}
+            generateAction={generateCreatorDraftWithId}
+            markSentAction={markCreatorDraftSent}
+            deleteAction={deleteCreatorDraft}
+          />
+        </div>
 
         <InteractionsSection interactions={interactions ?? []} logAction={logCreatorInteractionWithId} />
 
-        <form action={updateCreatorWithId} className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="full_name">Nome</Label>
-              <Input id="full_name" name="full_name" defaultValue={creator.full_name ?? ""} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="city">Città</Label>
-              <Input id="city" name="city" defaultValue={creator.city ?? ""} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="follower_count">Follower</Label>
+        <form action={updateCreatorWithId} className="flex flex-col">
+          <FormGroup title="Anagrafica">
+            <FormRow label="Nome">
+              <Input id="full_name" name="full_name" defaultValue={creator.full_name ?? ""} className={fieldInputClass} />
+            </FormRow>
+            <FormRow label="Città">
+              <Input id="city" name="city" defaultValue={creator.city ?? ""} className={fieldInputClass} />
+            </FormRow>
+            <FormRow label="Follower">
               <Input
                 id="follower_count"
                 name="follower_count"
                 type="number"
                 defaultValue={creator.follower_count ?? ""}
+                className={fieldInputClass}
               />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="pipeline_status">Stato pipeline</Label>
+            </FormRow>
+            <FormRow label="Stato pipeline">
               <select
                 id="pipeline_status"
                 name="pipeline_status"
                 defaultValue={creator.pipeline_status}
-                className="h-9 rounded-md border bg-transparent px-3 text-sm"
+                className="h-7 rounded-md border-0 bg-transparent text-right text-[14px] focus:outline-none"
               >
                 {PIPELINE_STATUSES.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -135,25 +163,25 @@ export default async function CreatorDetailPage({
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
+            </FormRow>
+            <FormRow label="Tag estetici" stacked>
+              <Input
+                id="aesthetic_tags"
+                name="aesthetic_tags"
+                placeholder="separati da virgola"
+                defaultValue={(creator.aesthetic_tags ?? []).join(", ")}
+              />
+            </FormRow>
+          </FormGroup>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="aesthetic_tags">Tag estetici (separati da virgola)</Label>
-            <Input
-              id="aesthetic_tags"
-              name="aesthetic_tags"
-              defaultValue={(creator.aesthetic_tags ?? []).join(", ")}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Note / bio</Label>
-            <Textarea id="notes" name="notes" defaultValue={creator.notes ?? ""} rows={4} />
-          </div>
+          <FormGroup title="Note / bio">
+            <FormRow label="" stacked>
+              <Textarea id="notes" name="notes" defaultValue={creator.notes ?? ""} rows={4} />
+            </FormRow>
+          </FormGroup>
 
           <Button type="submit" className="w-fit">
-            Salva
+            Salva modifiche
           </Button>
         </form>
       </div>
