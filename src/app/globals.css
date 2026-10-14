@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-ui);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-archivo);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,6 +39,14 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
+  --color-primary-tint: var(--primary-tint);
+  --color-primary-hover: var(--primary-hover);
+  --color-bezel: var(--bezel);
+  --color-bezel-hover: var(--bezel-hover);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -46,75 +54,101 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-card: var(--radius-card);
+  --radius-input: var(--radius-input);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Hawkeye — light theme: black / beige / red. Desktop-only. */
+  --background: #f3eee3;
+  --foreground: #1c1917;
+  --card: #fbf8f1;
+  --card-foreground: #1c1917;
+  --popover: #fbf8f1;
+  --popover-foreground: #1c1917;
+  --primary: #8e2436;
+  --primary-hover: #751d2c;
+  --primary-tint: #8e24361a;
+  --primary-foreground: #ffffff;
+  --secondary: #ffffff;
+  --secondary-foreground: #1c1917;
+  --muted: #e8e0d0;
+  --muted-foreground: #8a8172;
+  --accent: #8e24361a;
+  --accent-foreground: #8e2436;
+  --destructive: #d7372a;
+  --success: #1f9d4b;
+  --success-tint: #1f9d4b1a;
+  --warning: #c97a05;
+  --warning-tint: #c97a051a;
+  --border: #ded3bc;
+  --input: #ded3bc;
+  --ring: #8e2436;
+  --chart-1: #8e2436;
+  --chart-2: #b9798a;
+  --chart-3: #8a8172;
+  --chart-4: #c7bba0;
+  --chart-5: #ded3bc;
+  --radius: 14px;
+  --radius-card: 20px;
+  --radius-input: 12px;
+  --bezel: linear-gradient(180deg, #ffffff 0%, #f0e9db 100%);
+  --bezel-hover: linear-gradient(180deg, #ffffff 0%, #e8dfcc 100%);
+  --bezel-primary: linear-gradient(180deg, #a3304a 0%, #7a1f2e 100%);
+  --bezel-primary-hover: linear-gradient(180deg, #b23b56 0%, #872636 100%);
+  --sidebar: #fbf8f1;
+  --sidebar-foreground: #1c1917;
+  --sidebar-primary: #8e2436;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #8e24361a;
+  --sidebar-accent-foreground: #8e2436;
+  --sidebar-border: #ded3bc;
+  --sidebar-ring: #8e2436;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Hawkeye — dark cockpit theme, inspired by Ferrari Luce infotainment. */
+  --background: #0b0b0d;
+  --foreground: #f2f2f2;
+  --card: #19191c;
+  --card-foreground: #f2f2f2;
+  --popover: #1a1a1d;
+  --popover-foreground: #f2f2f2;
+  --primary: #b5324a;
+  --primary-hover: #952840;
+  --primary-tint: #b5324a26;
+  --primary-foreground: #ffffff;
+  --secondary: #202023;
+  --secondary-foreground: #f2f2f2;
+  --muted: #202023;
+  --muted-foreground: #8a8a8f;
+  --accent: #b5324a26;
+  --accent-foreground: #e25a72;
+  --destructive: #ff453a;
+  --success: #30d158;
+  --success-tint: #30d15826;
+  --warning: #ff9f0a;
+  --warning-tint: #ff9f0a26;
+  --border: #2c2c30;
+  --input: #2c2c30;
+  --ring: #c43f58;
+  --chart-1: #c43f58;
+  --chart-2: #8a8a8f;
+  --chart-3: #5c5c62;
+  --chart-4: #3a3a3e;
+  --chart-5: #2c2c30;
+  --bezel: linear-gradient(180deg, #232327 0%, #19191c 100%);
+  --bezel-hover: linear-gradient(180deg, #28282c 0%, #1d1d20 100%);
+  --bezel-primary: linear-gradient(180deg, #c43f58 0%, #952840 100%);
+  --bezel-primary-hover: linear-gradient(180deg, #d14e67 0%, #a3304a 100%);
+  --sidebar: #141416;
+  --sidebar-foreground: #f2f2f2;
+  --sidebar-primary: #b5324a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #b5324a26;
+  --sidebar-accent-foreground: #e25a72;
+  --sidebar-border: #2c2c30;
+  --sidebar-ring: #c43f58;
 }
 
 @layer base {
@@ -123,8 +157,81 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-ui);
+    background-attachment: fixed;
+  }
+  .dark body {
+    background-image: radial-gradient(
+      circle at 50% 0%,
+      rgb(255 255 255 / 0.03),
+      transparent 60%
+    );
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  /* System UI stack for readable body copy. */
+  :root {
+    --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-geist-sans), Inter,
+      system-ui, sans-serif;
+  }
+
+  /* Hero numbers and page titles. */
+  .font-display {
+    font-family: var(--font-archivo), sans-serif;
+    font-weight: 800;
+    font-variation-settings: "wdth" 110;
+    letter-spacing: -0.015em;
+  }
+
+  /* Technical / diagram-annotation label style (BINNACLE, VOLANTE…). */
+  .font-technical {
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .shadow-soft {
+    box-shadow: 0 16px 50px -12px rgb(0 0 0 / 0.65);
+  }
+
+  /* Physical analog-switch bezel: subtle top highlight + bottom depth. */
+  .bezel {
+    background: var(--bezel);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.07),
+      inset 0 -1px 0 rgb(0 0 0 / 0.4),
+      0 1px 2px rgb(0 0 0 / 0.5);
+  }
+
+  .bezel:hover {
+    background: var(--bezel-hover);
+  }
+
+  .bezel-glow {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.07),
+      0 0 0 1px var(--primary),
+      0 0 16px -2px var(--primary);
+  }
+
+  .bezel-primary {
+    background: var(--bezel-primary);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.15),
+      inset 0 -1px 0 rgb(0 0 0 / 0.25),
+      0 0 18px -4px var(--primary);
+  }
+
+  .bezel-primary:hover {
+    background: var(--bezel-primary-hover);
   }
 }
