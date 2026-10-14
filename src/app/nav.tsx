@@ -8,7 +8,13 @@ export function Nav() {
         Negozi
       </Link>
       <Link href="/stores/discover" className="text-muted-foreground hover:text-foreground">
-        Scopri nuovi
+        Scopri negozi
+      </Link>
+      <Link href="/creators" className="text-muted-foreground hover:text-foreground">
+        Influencer
+      </Link>
+      <Link href="/creators/discover" className="text-muted-foreground hover:text-foreground">
+        Scopri influencer
       </Link>
       <Link href="/settings" className="text-muted-foreground hover:text-foreground">
         Impostazioni
